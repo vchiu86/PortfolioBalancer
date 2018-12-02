@@ -105,7 +105,7 @@ public class Portfolio {
 			append(String.format("%.2f", marketValue)).append(" Portfolio %:").
 			append(String.format("%.2f", percentage)).append("% Target %:").append(String.format("%.2f", targetAllocation)).append("%\n");
 		}
-		sb.append("The total market value of the portfolio is ").append(String.format("%.3f", combinedMarketValueAllFunds)).append(".");
+		sb.append("The total market value of the portfolio is ").append(String.format("%.2f", combinedMarketValueAllFunds)).append(".");
 		return sb.toString();
 	}
 	

@@ -4,7 +4,6 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JScrollPane;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -14,6 +13,7 @@ import java.util.Map.Entry;
 
 import javax.swing.JTextField;
 import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
 
 
 public class Balancer {
@@ -76,6 +76,12 @@ public class Balancer {
 				portfolio.addFund(fund, units, targetAllocation);
 				marketPrices.put(symbol, purchasePrice);
 				updateCurrentPortfolioTextArea();
+				symbolTextField.setText("");
+				unitsTextField.setText("");
+				marketPriceTextField.setText("");
+				purchasePriceTextField.setText("");
+				targetAllocationTextField.setText("");
+				purchasesToBalanceTextArea.setText("");
 			}
 		});
 		btnAddFund.setBounds(552, 38, 118, 23);
@@ -86,6 +92,7 @@ public class Balancer {
 			public void actionPerformed(ActionEvent e) {
 				clear();
 				updateCurrentPortfolioTextArea();
+				purchasesToBalanceTextArea.setText("");
 			}
 		});
 		btnClearFunds.setBounds(552, 63, 118, 23);
@@ -104,8 +111,16 @@ public class Balancer {
 		JButton btnBalance = new JButton("Balance");
 		btnBalance.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				if(portfolio.getTargetAllocationPercentage().values().stream().mapToDouble(d -> d.doubleValue()).sum() != 100.0)
+				{
+					purchasesToBalanceTextArea.setText("Target allocation percentages must sum to 100.0%.");
+					portfolio.clear();
+					amountToContributeTextField.setText("");
+					return;
+				}
 				calculateUnitsToBalance();
 				updatePurchasesToBalanceTextArea();
+				amountToContributeTextField.setText("");
 			}
 		});
 		btnBalance.setBounds(267, 310, 89, 23);
@@ -183,6 +198,17 @@ public class Balancer {
 		targetAllocationTextField.setBounds(429, 39, 86, 20);
 		frmPortfolioBalancer.getContentPane().add(targetAllocationTextField);
 		targetAllocationTextField.setColumns(10);
+		
+		JButton btnUseMarketPrice = new JButton("Use market price");
+		btnUseMarketPrice.setFont(new Font("Tahoma", Font.PLAIN, 11));
+		btnUseMarketPrice.setHorizontalAlignment(SwingConstants.LEFT);
+		btnUseMarketPrice.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				purchasePriceTextField.setText(marketPriceTextField.getText());
+			}
+		});
+		btnUseMarketPrice.setBounds(314, 63, 116, 23);
+		frmPortfolioBalancer.getContentPane().add(btnUseMarketPrice);
 	}
 	
 	private void updateCurrentPortfolioTextArea()
