@@ -1,0 +1,222 @@
+<html>
+
+<head>
+  <style>
+    body {
+        background-color: rgb(209, 201, 193);
+      }
+
+      input,
+      label {
+        display: block;
+      }
+    
+      table, {
+        border: 1px solid black;
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      td, th {
+        border: 1px solid #000000;
+        text-align: left;
+        padding: 5px;
+      }
+    </style>
+</head>
+<header>
+  <h1>
+    Portfolio Balancer
+  </h1>
+  <h2>
+    Add funds to portfolio and click the balance button. Portfolio allocation must add up to 100.
+  </h2>
+</header>
+
+<body>
+  <script>
+    class Fund {
+      constructor(fundName, price, currentQuantity, targetAllocation) {
+        this.fundName = fundName;
+        this.price = price;
+        this.currentQuantity = currentQuantity;
+        this.targetAllocation = targetAllocation;
+      }
+
+      totalValue() {
+        return this.price * this.currentQuantity;
+      }
+    }
+
+    class Portfolio {
+      constructor() {
+        this.funds = [];
+      }
+
+      add(fund) {
+        this.funds[this.funds.length] = fund;
+      }
+
+      remove(fundName) {
+        for (var i = 0; i < this.funds.length; i++) {
+          if (this.funds[i].fundName == fundName) {
+            this.funds.splice(i, 1);
+            return;
+          }
+        }
+      }
+
+      clear() {
+        this.funds = [];
+      }
+
+      getTotalAllocations() {
+        return this.funds.reduce((totalAllocation, fund) => totalAllocation + fund.targetAllocation, 0);
+      }
+
+      getTotalValue() {
+        return this.funds.reduce((totalValue, fund) => totalValue + fund.totalValue(), 0);
+      }
+
+      getChangesToBalance(contribution) {
+        if (this.getTotalAllocations() != 100) {
+          if(this.getTotalAllocations() > 100)
+          {
+            throw "Allocations exceed 100."
+          }
+          throw "Allocations do not sum to 100.";
+        }
+        var result = {};
+        var totalNewValue = this.getTotalValue() + contribution;
+        for (var i = 0; i < this.funds.length; i++) {
+          var currentFund = this.funds[i];
+          var totalNewFundValue = totalNewValue * (currentFund.targetAllocation / 100);
+          var difference = totalNewFundValue - currentFund.totalValue();
+          var changeInQuantity = Math.floor(difference / currentFund.price);
+          result[currentFund.fundName] = changeInQuantity;
+        }
+        return result;
+      }
+    }
+
+    var portfolio = new Portfolio();
+
+    function addFundToPortfolio() {
+      var fundName = document.getElementById('fundName').value;
+      var fundPrice = parseFloat(document.getElementById('fundPrice').value);
+      var fundQuantity = parseInt(document.getElementById('fundQuantity').value);
+      var fundAllocation = parseFloat(document.getElementById('fundAllocation').value);
+      var fund = new Fund(fundName, fundPrice, fundQuantity, fundAllocation);
+      portfolio.add(fund);
+      clearFundsTable();
+      displayPortfolio();
+    }
+
+    function clearFundsTable() {
+      var table = document.getElementById("fundsTable");
+      var rows = table.rows.length;
+      // delete all rows except first
+      for (var i = 1; i < rows; i++) {
+        table.deleteRow(1);
+      }
+    }
+
+    function displayPortfolio() {
+      for (var i = 0; i < portfolio.funds.length; i++) {
+        addFundToTable(portfolio.funds[i]);
+      }
+    }
+
+    function addFundToTable(fund) {
+      var table = document.getElementById("fundsTable");
+      var row = table.insertRow(-1);
+      var fundNameCell = row.insertCell(0);
+      var fundPriceCell = row.insertCell(1);
+      var fundQuantityCell = row.insertCell(2);
+      var fundTotalValueCell = row.insertCell(3);
+      var fundTargetAllocationCell = row.insertCell(4);
+      fundNameCell.innerHTML = fund.fundName;
+      fundPriceCell.innerHTML = fund.price.toString();
+      fundQuantityCell.innerHTML = fund.currentQuantity.toString();
+      fundTotalValueCell.innerHTML = fund.totalValue().toString();
+      fundTargetAllocationCell.innerHTML = fund.targetAllocation.toString() + "%";
+    }
+
+    function clearPortfolio() {
+      clearFundsTable();
+      portfolio = new Portfolio();
+    }
+
+    function getActions() {
+      var contribution = parseFloat(document.getElementById('contribution').value);
+      try {
+        var actions = Object.entries(portfolio.getChangesToBalance(contribution));
+        var result = "";
+        for(const action of actions)
+        {
+          var buyOrSell = "Buy";
+           if(action[1] < 0)
+           {
+             buyOrSell = "Sell";
+           }
+           result += buyOrSell + " " + Math.abs(action[1]) + " units of " + action[0] + "<br>";
+        }
+        var element = document.getElementById("actions");
+        element.innerHTML = result;
+      }
+      catch (err) {
+        var element = document.getElementById("actions");
+        if(err.includes("exceed"))
+        {
+           clearPortfolio();
+        }
+        element.innerHTML = err;
+      }
+    }
+  </script>
+
+  <div style="float:left;margin-right:1%;">
+    <label for="fundName">Fund name</label>
+    <input id="fundName" type="text" onfocus="this.value=''" value="ABC" name="fundName">
+  </div>
+  <div style="float:left;margin-right:1%;">
+    <label for="fundPrice">Fund price</label>
+    <input id="fundPrice" type="text" onfocus="this.value=''" value="10.00" name="fundPrice">
+  </div>
+  <div style="float:left;margin-right:1%;">
+    <label for="fundQuantity">Fund quantity</label>
+    <input id="fundQuantity" type="text" onfocus="this.value=''" value="20" name="fundQuantity">
+  </div>
+  <div>
+    <label for="fundAllocation">Fund target allocation percentage</label>
+    <input id="fundAllocation" type="text" onfocus="this.value=''" value="15" name="fundAllocation">
+  </div>
+  <button onclick="addFundToPortfolio();">Add fund</button>
+  <h3>
+    Current portfolio
+  </h3>
+  <table id="fundsTable">
+    <tr>
+      <th>Fund</th>
+      <th>Price</th>
+      <th>Quantity</th>
+      <th>Total Value Of Fund</th>
+      <th>Target Allocation</th>
+    </tr>
+  </table>
+  <br>
+  <button onclick="clearPortfolio();">Clear portfolio</button>
+  <br>
+  <h3>
+    Contribution
+  </h3>
+  <input id="contribution" type="text" onfocus="this.value=''" value="1000" name="contribution">
+  <br>
+  <button onclick="getActions();">Balance</button>
+  <h3>
+    Actions to balance
+  </h3>
+  <p id="actions"></p>
+</body>
+
+</html>
